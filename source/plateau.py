@@ -227,7 +227,7 @@ def Plateau(plan):
             set_joueurs, set_fantomes = {player for player in joueurs.keys() if joueurs[player] == (i+1,j+1)}, {phantom for phantom in fantomes.keys() if fantomes[phantom] == (i+1,j+1)}
             ligne.append(case.Case(tp[i][j] == '#', tp[i][j] if tp[i][j] in const.LES_OBJETS else const.AUCUN, None if set_joueurs == set() else set_joueurs, None if set_fantomes == set() else set_fantomes))
         cases.append(ligne)
-
+    print(cases)
     res = {'nb_lignes': nb_lignes,
             'nb_colonnes': nb_colonnes,
             'nb_joueurs': nb_joueurs,
@@ -235,7 +235,6 @@ def Plateau(plan):
             'cases': cases,
             'joueurs': joueurs,
             'fantomes': fantomes}
-
     return res
 
 
@@ -261,7 +260,7 @@ def enlever_pacman(plateau, pacman, pos):
     Returns:
         bool: True si l'opération s'est bien déroulée, False sinon
     """
-    pass
+    ...
 
 
 def enlever_fantome(plateau, fantome, pos):
@@ -290,9 +289,14 @@ def prendre_objet(plateau, pos):
         int: l'entier représentant l'objet qui se trouvait sur la case.
         const.AUCUN indique aucun objet
     """
-    pass
+    res = get_objet(plateau,pos)
+    if res == const.AUCUN :
+        res = 0 
+    else :
+        set_case(plateau,pos,const.AUCUN)
+    return res 
 
-        
+
 def deplacer_pacman(plateau, pacman, pos, direction, passemuraille=False):
     """Déplace dans la direction indiquée un joueur se trouvant en position pos
         sur le plateau si c'est possible
@@ -336,7 +340,14 @@ def case_vide(plateau):
     Returns:
         (int,int): la position choisie
     """
-    pass
+    liste_case = []
+    for i in range(get_nb_lignes):
+        for j in range(get_nb_colonnes):
+            case = get_case(plateau,i,j)
+            if case == const.AUCUN:
+                liste_case.append((i,j))
+    aleatoire = random.randit(len(liste_case))
+    return liste_case[aleatoire]
 
 
 def directions_possibles(plateau,pos,passemuraille=False):
