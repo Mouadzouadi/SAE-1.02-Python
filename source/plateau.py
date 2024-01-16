@@ -147,7 +147,7 @@ def get_objet(plateau, pos):
     Returns:
         str: le caractère symbolisant l'objet
     """
-    return plateau['cases'][pos[0]][pos[1]]['objet']
+    return case.get_objet(get_case(plateau, pos))
 
 
 def poser_pacman(plateau, pacman, pos):
@@ -158,7 +158,7 @@ def poser_pacman(plateau, pacman, pos):
         pacman (str): la lettre représentant le pacman
         pos (tuple): une paire (lig,col) de deux int
     """
-    plateau['cases'][pos[0]][pos[1]] = pacman
+    case.poser_pacman(get_case(plateau, pos), pacman)
 
 
 def poser_fantome(plateau, fantome, pos):
@@ -169,7 +169,7 @@ def poser_fantome(plateau, fantome, pos):
         fantome (str): la lettre représentant le fantome
         pos (tuple): une paire (lig,col) de deux int
     """
-    plateau['cases'][pos[0]][pos[1]] = fantome
+    case.poser_fantome(get_case(plateau, pos), fantome)
 
 
 def poser_objet(plateau, objet, pos):
@@ -182,19 +182,6 @@ def poser_objet(plateau, objet, pos):
         pos (tuple): une paire (lig,col) de deux int
     """
     plateau['cases'][pos[0]][pos[1]] = objet
-
-
-def plateau_from_str(la_chaine, complet=True):
-    """Construit un plateau à partir d'une chaine de caractère contenant les informations
-        sur le contenu du plateau (voir sujet)
-
-    Args:
-        la_chaine (str): la chaine de caractères décrivant le plateau
-
-    Returns:
-        dict: le plateau correspondant à la chaine. None si l'opération a échoué
-    """
-    pass
 
 
 def Plateau(plan):
@@ -222,20 +209,26 @@ def Plateau(plan):
             dico[tp[i][0]] = int(tp[i][1]), int(tp[i][2])
         
         return dico
-
+    
     nb_lignes, nb_colonnes = int(tp[0][0]), int(tp[0][1])
     nb_joueurs = int(tp[nb_lignes + 1])
     nb_fantomes = int(tp[nb_lignes + nb_joueurs + 2])
     joueurs = positions(nb_joueurs, nb_lignes + 2)
     fantomes = positions(nb_fantomes, nb_lignes + nb_joueurs + 3)
-
     cases = []
-    for i in range(1, nb_lignes + 1):
-        ligne = []
-        for j in range(nb_colonnes):
-            set_joueurs, set_fantomes = {player for player in joueurs.keys() if joueurs[player] == (i-1,j)}, {phantom for phantom in fantomes.keys() if fantomes[phantom] == (i-1,j)}
-            ligne.append(case.Case(tp[i][j] == '#', tp[i][j] if tp[i][j] in const.LES_OBJETS else const.AUCUN, None if set_joueurs == set() else set_joueurs, None if set_fantomes == set() else set_fantomes))
-        cases.append(ligne)
+
+    for y in range(nb_lignes):
+        cases.append([])
+
+        for elem in tp[y + 1]:
+            if elem == const.AUCUN:
+                cases[y].append(case.Case())
+
+            elif elem in const.LES_OBJETS:
+                cases[y].append(case.Case(objet=elem))
+
+            else:
+                cases[y].append(case.Case(mur=True))
 
     res = {'nb_lignes': nb_lignes,
             'nb_colonnes': nb_colonnes,
@@ -244,6 +237,12 @@ def Plateau(plan):
             'cases': cases,
             'joueurs': joueurs,
             'fantomes': fantomes}
+
+    for pacman in joueurs:
+        poser_pacman(res, pacman, joueurs[pacman])
+
+    for fantom in fantomes:
+        poser_fantome(res, fantom, fantomes[fantom])
 
     return res
 
@@ -299,7 +298,7 @@ def prendre_objet(plateau, pos):
         int: l'entier représentant l'objet qui se trouvait sur la case.
         const.AUCUN indique aucun objet
     """
-    return case.prendre_objet(get_case(plateau,pos)) 
+    return case.prendre_objet(get_case(plateau, pos))
 
         
 def deplacer_pacman(plateau, pacman, pos, direction, passemuraille=False):
@@ -368,6 +367,7 @@ def case_vide(plateau):
     return liste_case[aleatoire]
 
 
+
 def directions_possibles(plateau,pos,passemuraille=False):
     """ retourne les directions vers où il est possible de se déplacer à partir
         de la position pos
@@ -382,13 +382,13 @@ def directions_possibles(plateau,pos,passemuraille=False):
               à partir de pos
     """
     direct = ""
-    if not case.est_mur(get_case(pos_nord(plateau,pos))) or passemuraille :
+    if not case.est_mur(get_case(plateau,pos_nord(plateau,pos))) or passemuraille :
         direct += "N"
-    elif not case.est_mur(get_case(pos_est(plateau,pos))) or passemuraille :
+    if not case.est_mur(get_case(plateau,pos_est(plateau,pos))) or passemuraille :
         direct += "E"
-    elif not case.est_mur(get_case(pos_sud(plateau,pos))) or passemuraille :
+    if not case.est_mur(get_case(plateau,pos_sud(plateau,pos))) or passemuraille :
         direct += "S"       
-    elif not case.est_mur(get_case(pos_ouest(plateau,pos))) or passemuraille :
+    if not case.est_mur(get_case(plateau,pos_ouest(plateau,pos))) or passemuraille :
         direct += "O"
     return direct
 
@@ -463,10 +463,3 @@ def plateau_2_str(plateau):
         for fantome, lig, col in fantomes:
             res += str(fantome)+";"+str(lig)+";"+str(col)+"\n"
         return res
-
-
-
-
-
-
-
